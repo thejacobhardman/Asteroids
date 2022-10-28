@@ -37,15 +37,15 @@ while game_running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             game_running = False
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:
-                playerY_change = -0.3
-            if event.key == pygame.K_DOWN:
-                playerY_change = 0.3
-            if event.key == pygame.K_RIGHT:
-                playerX_change = 0.3
-            if event.key == pygame.K_LEFT:
-                playerX_change = -0.3
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_UP]:
+            playerY_change = -0.3
+        if keys[pygame.K_DOWN]:
+            playerY_change = 0.3
+        if keys[pygame.K_RIGHT]:
+            playerX_change = 0.3
+        if keys[pygame.K_LEFT]:
+            playerX_change = -0.3
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_UP or event.key == pygame.K_DOWN:
                 playerY_change = 0
