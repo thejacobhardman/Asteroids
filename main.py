@@ -1,4 +1,4 @@
-import pygame
+import pygame, random
 
 pygame.init()
 
@@ -16,6 +16,22 @@ playerY_change = 0
 def player(x, y):
     screen.blit(player_image, (x, y))
 
+class asteroid:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.radius = 80
+        self.image = pygame.image.load('Asteroid Brown.png')
+        self.x_change = 0
+        self.y_change = 0
+
+    def asteroid(self):
+        screen.blit(self.image, (self.x, self.y))
+
+    # def update_location(self):
+
+
+asteroid_count = 0
 game_running = True
 while game_running:
     for event in pygame.event.get():
