@@ -111,19 +111,40 @@ class Asteroid(pygame.sprite.Sprite):
 
 class Star():
     def __init__(self):
-        pygame.sprite.Sprite.__init__(self)
-        self.x = random.randint(0, WIDTH)
-        self.y = random.randint(0, HEIGHT)
-        self.color = (255, 255, 255)
+        self.position = vec(WIDTH / 2, HEIGHT / 2)
+        self.vel = vec(0, 0)
+        self.acceleration = vec(0, -0.2)
+        self.angle_speed = 0
+        self.angle = 0
+        self.color = (200, 200, 200)
         self.radius = 1
 
+    def update(self, vel):
+        self.vel = vel
+        self.position += vel
+        self.twinkle()
+        self.wrap_around_screen()
+
+    def wrap_around_screen(self):
+        if self.position.x > WIDTH:
+            self.position.x = 0
+        if self.position.x < 0:
+            self.position.x = WIDTH
+        if self.position.y <= 0:
+            self.position.y = HEIGHT
+        if self.position.y > HEIGHT:
+            self.position.y = 0
+
     def draw(self):
-        pygame.draw.circle(screen, self.color, (self.x, self.y), self.radius)
+        pygame.draw.circle(screen, self.color, (self.position.x, self.position.y), self.radius)
+
+    def twinkle(self):
+        self.color = (255, 255, 255)
 
 # Checks to make sure that no stars are overlapping
 def check_intersections(c1, c2):
-    dx = c1.x - c2.x
-    dy = c1.y - c2.y
+    dx = c1.position.x - c2.position.x
+    dy = c1.position.y - c2.position.y
     distance = math.hypot(dx, dy)
     if distance < c1.radius + c2.radius:
         return True
@@ -140,8 +161,8 @@ for i in range(200):
     stars.append(Star())
 for i in range(199):
     while check_intersections(stars[i], stars[i+1]):
-        stars[i].x = random.randint(0, WIDTH)
-        stars[i].y = random.randint(0, HEIGHT)
+        stars[i].position.x = random.randint(0, WIDTH)
+        stars[i].position.y = random.randint(0, HEIGHT)
 
 fullscreen = False
 
@@ -190,6 +211,7 @@ while game_running:
     screen.fill((0, 0, 0))
     for star in stars:
         star.draw()
+        star.update(-player.vel)
     all_sprites.draw(screen)
     pygame.display.update()
     fps_clock.tick(FPS)
