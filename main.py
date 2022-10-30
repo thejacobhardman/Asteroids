@@ -77,13 +77,23 @@ class Asteroid(pygame.sprite.Sprite):
     def __init__(self, spin_direction, spin_factor):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load('Asteroid Brown.png')
+
+        # Randomly changes the size of the asteroid
         new_size_value = random.randint(40, 160)
-        new_size = (new_size_value, new_size_value)
-        self.image = pygame.transform.scale(self.image, new_size)
+        self.new_size = (new_size_value, new_size_value)
+        self.image = pygame.transform.scale(self.image, self.new_size)
         self.original_image = self.image
-        self.position = vec(WIDTH / 2, HEIGHT / 2)
+
+        # Spawns the asteroid in a random spot offscreen
+        starting_pos = self.calculate_starting_pos()
+        self.position = vec(starting_pos[0], starting_pos[1])
         self.rect = self.image.get_rect(center=self.position)
-        self.vel = vec(random.randint(-2, 2), random.randint(-2, 2))
+
+        # Moves the asteroid in a straight line based on its starting pos
+        starting_vec = self.calculate_trajectory(starting_pos)
+        self.vel = vec(starting_vec[0], starting_vec[1])
+
+        # Spins the asteroid
         self.spin_direction = spin_direction
         self.spin_angle = 0
         self.spin_factor = spin_factor
@@ -91,8 +101,53 @@ class Asteroid(pygame.sprite.Sprite):
     def update(self):
         self.position += self.vel
         self.rect.center = self.position
-        self.leave_screen()
+        #self.leave_screen()
         self.spin()
+    
+    def calculate_starting_pos(self):
+        starting_x_side = "left" if random.randint(0, 1) == 0 else "right"
+        if starting_x_side == "left":
+            starting_x_value = random.randint(-self.new_size[0], WIDTH/2)
+        elif starting_x_side == "right":
+            starting_x_value = random.randint(WIDTH/2+1, WIDTH+self.new_size[1])
+        if starting_x_value <= 0 or starting_x_value >= WIDTH:
+            starting_y_value = random.randint(0, 720)
+        else:
+            starting_y_cond = "top" if random.randint(0, 1) == 0 else "bottom"
+            if starting_y_cond == "top":
+                starting_y_value = -self.new_size[0]
+            elif starting_y_cond == "bottom":
+                starting_y_value = HEIGHT+self.new_size[0]
+
+        starting_pos = (starting_x_value, starting_y_value)
+        return starting_pos
+
+    def calculate_trajectory(self, starting_pos):
+        starting_x_vec = 0
+        starting_y_vec = 0
+
+        # Spawns in top left: start_x < WIDTH/2 and start_y < 0
+        if starting_pos[0] < WIDTH/2 and starting_pos[1] < 0:
+            starting_x_vec = random.randint(1, 3)
+            starting_y_vec = random.randint(1, 3)
+
+        # Spawns in top right: start_x >= WIDTH/2 and start_y < 0
+        elif starting_pos[0] >= WIDTH/2 and starting_pos[1] < 0:
+            starting_x_vec = random.randint(-3, -1)
+            starting_y_vec = random.randint(1, 3)
+
+        # Spawns in bottom left: start_x < WIDTH/2 and start_y > HEIGHT
+        elif starting_pos[0] < WIDTH/2 and starting_pos[1] > HEIGHT:
+            starting_x_vec = random.randint(1, 3)
+            starting_y_vec = random.randint(-3, -1)
+
+        # Spawns in bottom right: start_x >= WIDTH/2 and start_y > HEIGHT
+        elif starting_pos[0] >= WIDTH/2 and starting_pos[1] > HEIGHT:
+            starting_x_vec = random.randint(-3, -1)
+            starting_y_vec = random.randint(-3, -1)
+
+        starting_vec = (starting_x_vec, starting_y_vec)
+        return starting_vec
 
     def spin(self):
         if self.spin_direction == "clockwise":
@@ -195,7 +250,7 @@ while game_running:
                     screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 
     # Spawns new asteroids
-    if asteroid_count < 1:
+    if asteroid_count < 10:
         # Determines what direction and how fast the asteroid will spin
         spin_generator = random.randint(0, 1)
         spin_factor = random.randint(0, 10)
