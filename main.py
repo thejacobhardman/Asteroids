@@ -77,6 +77,9 @@ class Asteroid(pygame.sprite.Sprite):
     def __init__(self, spin_direction, spin_factor):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load('Asteroid Brown.png')
+        new_size_value = random.randint(40, 160)
+        new_size = (new_size_value, new_size_value)
+        self.image = pygame.transform.scale(self.image, new_size)
         self.original_image = self.image
         self.position = vec(WIDTH / 2, HEIGHT / 2)
         self.rect = self.image.get_rect(center=self.position)
@@ -116,13 +119,13 @@ class Star():
         self.acceleration = vec(0, -0.2)
         self.angle_speed = 0
         self.angle = 0
-        self.color = (200, 200, 200)
+        self.color = (255, 255, 255)
         self.radius = 1
 
     def update(self, vel):
         self.vel = vel
         self.position += vel
-        self.twinkle()
+        #self.twinkle()
         self.wrap_around_screen()
 
     def wrap_around_screen(self):
@@ -138,8 +141,11 @@ class Star():
     def draw(self):
         pygame.draw.circle(screen, self.color, (self.position.x, self.position.y), self.radius)
 
-    def twinkle(self):
-        self.color = (255, 255, 255)
+    # def twinkle(self):
+    #     twinkle = random.randint(0, 1)
+    #     if twinkle == 1:
+    #         self.color = (0, 0, 0)
+    #     self.color = (255, 255, 255)
 
 # Checks to make sure that no stars are overlapping
 def check_intersections(c1, c2):
@@ -209,9 +215,11 @@ while game_running:
     #     print(sprite)
 
     screen.fill((0, 0, 0))
+
     for star in stars:
         star.draw()
         star.update(-player.vel)
+
     all_sprites.draw(screen)
     pygame.display.update()
     fps_clock.tick(FPS)
