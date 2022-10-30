@@ -77,6 +77,7 @@ class Asteroid(pygame.sprite.Sprite):
     def __init__(self, spin_direction, spin_factor):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load('Asteroid Brown.png')
+        self.has_spawned = False
 
         # Randomly changes the size of the asteroid
         new_size_value = random.randint(40, 160)
@@ -101,8 +102,8 @@ class Asteroid(pygame.sprite.Sprite):
     def update(self):
         self.position += self.vel
         self.rect.center = self.position
-        #self.leave_screen()
         self.spin()
+        self.leave_screen()
     
     def calculate_starting_pos(self):
         starting_x_side = "left" if random.randint(0, 1) == 0 else "right"
@@ -158,14 +159,18 @@ class Asteroid(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=self.rect.center)
 
     def leave_screen(self):
-        if self.position.x > WIDTH:
-            all_sprites.remove(self)
-        if self.position.x < 0:
-            all_sprites.remove(self)
-        if self.position.y <= 0:
-            all_sprites.remove(self)
-        if self.position.y > HEIGHT:
-            all_sprites.remove(self)
+        if self.position.x < WIDTH and self.position.x > 0 and self.position.y < HEIGHT and self.position.y > 0:
+            self.has_spawned = True
+        if self.has_spawned:
+            if self.position.x > WIDTH:
+                all_sprites.remove(self)
+            if self.position.x < 0:
+                all_sprites.remove(self)
+            if self.position.y <= 0:
+                all_sprites.remove(self)
+            if self.position.y > HEIGHT:
+                all_sprites.remove(self)
+            
 
 class Star():
     def __init__(self):
@@ -264,10 +269,10 @@ while game_running:
         asteroid_count += 1
 
     player.wrap_around_screen()
+    current_sprites = all_sprites.__len__()
     all_sprites.update()
-
-    # for sprite in all_sprites:
-    #     print(sprite)
+    if all_sprites.__len__() < current_sprites:
+            asteroid_count -= 1
 
     screen.fill((0, 0, 0))
 
