@@ -1,4 +1,4 @@
-import pygame
+import pygame, random
 
 pygame.init()
 
@@ -70,18 +70,31 @@ class Player(pygame.sprite.Sprite):
             self.position.y = 0
 
 class Asteroid(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, spin_direction, spin_factor):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load('Asteroid Brown.png')
         self.original_image = self.image
         self.position = vec(WIDTH / 2, HEIGHT / 2)
         self.rect = self.image.get_rect(center=self.position)
         self.vel = vec(0, 0)
+        self.spin_direction = spin_direction
+        self.spin_angle = 0
+        self.spin_factor = spin_factor
 
     def update(self):
         self.position += self.vel
         self.rect.center = self.position
         self.leave_screen()
+        self.spin()
+
+    def spin(self):
+        if self.spin_direction == "clockwise":
+            self.spin_angle -= 1 - (self.spin_factor/2)
+        if self.spin_direction == "counter_clockwise":
+            self.spin_angle += 1 + (self.spin_factor/2)
+        print(self.spin_factor)
+        self.image = pygame.transform.rotate(self.original_image, self.spin_angle)
+        self.rect = self.image.get_rect(center=self.rect.center)
 
     def leave_screen(self):
         if self.position.x > WIDTH:
@@ -121,8 +134,16 @@ while game_running:
                     HEIGHT = 720
                     screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 
-    if asteroid_count <= 1:
-        asteroid = Asteroid()
+    # Determines what direction and how fast the asteroid will spin
+    if asteroid_count < 1:
+        spin_generator = random.randint(0, 1)
+        spin_factor = random.randint(0, 10)
+        spin_direction = ""
+        if spin_generator == 0:
+            spin_direction = "clockwise"
+        if spin_generator == 1:
+            spin_direction = "counter_clockwise"
+        asteroid = Asteroid(spin_direction, spin_factor)
         all_sprites.add(asteroid)
         asteroid_count += 1
 
