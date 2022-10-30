@@ -1,4 +1,4 @@
-import pygame, random
+import pygame, random, math
 
 pygame.init()
 
@@ -28,6 +28,7 @@ class Player(pygame.sprite.Sprite):
         self.angle = 0
 
     def update(self):
+        # Slows the ship as time passes
         if self.vel != 0:
             self.vel -= self.vel*0.02
 
@@ -69,6 +70,9 @@ class Player(pygame.sprite.Sprite):
         if self.position.y > HEIGHT:
             self.position.y = 0
 
+#class Bullet(pygame.sprite.Sprite):
+
+
 class Asteroid(pygame.sprite.Sprite):
     def __init__(self, spin_direction, spin_factor):
         pygame.sprite.Sprite.__init__(self)
@@ -76,7 +80,7 @@ class Asteroid(pygame.sprite.Sprite):
         self.original_image = self.image
         self.position = vec(WIDTH / 2, HEIGHT / 2)
         self.rect = self.image.get_rect(center=self.position)
-        self.vel = vec(0, 0)
+        self.vel = vec(random.randint(-2, 2), random.randint(-2, 2))
         self.spin_direction = spin_direction
         self.spin_angle = 0
         self.spin_factor = spin_factor
@@ -92,7 +96,6 @@ class Asteroid(pygame.sprite.Sprite):
             self.spin_angle -= 1 - (self.spin_factor/2)
         if self.spin_direction == "counter_clockwise":
             self.spin_angle += 1 + (self.spin_factor/2)
-        print(self.spin_factor)
         self.image = pygame.transform.rotate(self.original_image, self.spin_angle)
         self.rect = self.image.get_rect(center=self.rect.center)
 
@@ -106,10 +109,40 @@ class Asteroid(pygame.sprite.Sprite):
         if self.position.y > HEIGHT:
             all_sprites.remove(self)
 
+class Star():
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.x = random.randint(0, WIDTH)
+        self.y = random.randint(0, HEIGHT)
+        self.color = (255, 255, 255)
+        self.radius = 1
+
+    def draw(self):
+        pygame.draw.circle(screen, self.color, (self.x, self.y), self.radius)
+
+# Checks to make sure that no stars are overlapping
+def check_intersections(c1, c2):
+    dx = c1.x - c2.x
+    dy = c1.y - c2.y
+    distance = math.hypot(dx, dy)
+    if distance < c1.radius + c2.radius:
+        return True
+    return False
+
 all_sprites = pygame.sprite.Group()
 player = Player()
 all_sprites.add(player)
 asteroid_count = 0
+
+# Generates the starfield
+stars = []
+for i in range(200):
+    stars.append(Star())
+for i in range(199):
+    while check_intersections(stars[i], stars[i+1]):
+        stars[i].x = random.randint(0, WIDTH)
+        stars[i].y = random.randint(0, HEIGHT)
+
 fullscreen = False
 
 game_running = True
@@ -123,7 +156,7 @@ while game_running:
                 HEIGHT = event.h
                 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_f:
+            if event.key == pygame.K_f: # Handles if the player wants to fullscreen the game
                 fullscreen = not fullscreen
                 if fullscreen:
                     WIDTH = pygame.display.get_desktop_sizes()[0][0]
@@ -134,8 +167,9 @@ while game_running:
                     HEIGHT = 720
                     screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 
-    # Determines what direction and how fast the asteroid will spin
+    # Spawns new asteroids
     if asteroid_count < 1:
+        # Determines what direction and how fast the asteroid will spin
         spin_generator = random.randint(0, 1)
         spin_factor = random.randint(0, 10)
         spin_direction = ""
@@ -150,7 +184,12 @@ while game_running:
     player.wrap_around_screen()
     all_sprites.update()
 
+    # for sprite in all_sprites:
+    #     print(sprite)
+
     screen.fill((0, 0, 0))
+    for star in stars:
+        star.draw()
     all_sprites.draw(screen)
     pygame.display.update()
     fps_clock.tick(FPS)
