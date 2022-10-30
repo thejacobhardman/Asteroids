@@ -49,6 +49,7 @@ class Player(pygame.sprite.Sprite):
 
         self.position += self.vel
         self.rect.center = self.position
+        self.wrap_around_screen()
 
     def rotate(self):
         self.acceleration.rotate_ip(self.angle_speed)
@@ -255,7 +256,7 @@ while game_running:
                     screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 
     # Spawns new asteroids
-    if asteroid_count < 10:
+    if asteroid_count < 15:
         # Determines what direction and how fast the asteroid will spin
         spin_generator = random.randint(0, 1)
         spin_factor = random.randint(0, 10)
@@ -268,7 +269,6 @@ while game_running:
         all_sprites.add(asteroid)
         asteroid_count += 1
 
-    player.wrap_around_screen()
     current_sprites = all_sprites.__len__()
     all_sprites.update()
     if all_sprites.__len__() < current_sprites:
