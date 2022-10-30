@@ -28,6 +28,9 @@ class Player(pygame.sprite.Sprite):
         self.angle = 0
 
     def update(self):
+        if self.vel != 0:
+            self.vel -= self.vel*0.02
+
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             self.angle_speed = -4.5
