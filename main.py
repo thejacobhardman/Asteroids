@@ -1,4 +1,5 @@
 import pygame, random, math
+from itertools import repeat
 
 pygame.init()
 
@@ -10,10 +11,23 @@ MAX_SPEED = 9
 FPS = 60
 fps_clock = pygame.time.Clock()
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+org_screen = pygame.display.set_mode((WIDTH, HEIGHT))
+screen = org_screen.copy()
 pygame.display.set_caption("Asteroids")
 icon = pygame.image.load('Asteroid Brown.png')
 pygame.display.set_icon(icon)
+
+offset = repeat((0, 0))
+def shake():
+    s = -1
+    for _ in range(0, 3):
+        for x in range(0, 20, 5):
+            yield (x*s, 0)
+        for x in range(20, 0, 5):
+            yield (x*s, 0)
+        s *= -1
+    while True:
+        yield (0, 0)
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -264,11 +278,12 @@ def check_collisions(sprite, group):
             if collision:
                 all_sprites.remove(individual_sprite)
                 asteroids.remove(individual_sprite)
+                return True
     else:
         collision = pygame.sprite.spritecollide(sprite, group, False)
         if collision:
                 all_sprites.remove(sprite)
-    
+                return True
 
 all_sprites = pygame.sprite.Group()
 asteroids = pygame.sprite.Group()
@@ -293,22 +308,7 @@ while game_running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             game_running = False
-        if event.type == pygame.VIDEORESIZE:
-            if not fullscreen:
-                WIDTH = event.w
-                HEIGHT = event.h
-                screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_f: # Handles if the player wants to fullscreen the game
-                fullscreen = not fullscreen
-                if fullscreen:
-                    WIDTH = pygame.display.get_desktop_sizes()[0][0]
-                    HEIGHT = pygame.display.get_desktop_sizes()[0][1]
-                    screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
-                else:
-                    WIDTH = 1280
-                    HEIGHT = 720
-                    screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
             if event.key == pygame.K_SPACE:
                 player.shoot()
 
@@ -334,16 +334,19 @@ while game_running:
     if all_sprites.__len__() < current_sprites:
             asteroid_count -= 1
 
-    check_collisions(player, asteroids)
+    if check_collisions(player, asteroids):
+        offset = shake()
     if bullets.__len__() >= 1:
         check_collisions(asteroids, bullets)
 
+    org_screen.fill((255, 255, 255))
     screen.fill((0, 0, 0))
 
     for star in stars:
         star.draw()
         star.update(-player.vel)
 
-    all_sprites.draw(screen)
-    pygame.display.update()
     fps_clock.tick(FPS)
+    all_sprites.draw(screen)
+    org_screen.blit(screen, next(offset))
+    pygame.display.update()
