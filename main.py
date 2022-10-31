@@ -15,15 +15,18 @@ fps_clock = pygame.time.Clock()
 org_screen = pygame.display.set_mode((WIDTH, HEIGHT))
 screen = org_screen.copy()
 pygame.display.set_caption("Asteroids")
-icon = pygame.image.load('Asteroid Brown.png')
+icon = pygame.image.load('Assets/Art/Asteroid Brown.png')
 pygame.display.set_icon(icon)
 
-mixer.music.load("through space.ogg")
+mixer.music.load("Assets/SFX/through space.ogg")
 mixer.music.play(-1)
 
-bullet_sound = mixer.Sound("laser1.wav")
-engine_sound = mixer.Sound("engine3.wav")
-explosion_sound = mixer.Sound("explosion.wav")
+bullet_sound = mixer.Sound("Assets/SFX/laser1.wav")
+bullet_sound.set_volume(0.8)
+engine_sound = mixer.Sound("Assets/SFX/engine1.wav")
+engine_sound.set_volume(0.4)
+explosion_sound = mixer.Sound("Assets/SFX/explosion.wav")
+explosion_sound.set_volume(0.5)
 
 # Shakes the screen upon player death
 offset = repeat((0, 0))
@@ -41,7 +44,7 @@ def shake():
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load('ship.png')
+        self.image = pygame.image.load('Assets/Art/ship.png')
         self.original_image = self.image
         self.position = vec(WIDTH / 2, HEIGHT / 2)
         self.rect = self.image.get_rect(center=self.position)
@@ -105,7 +108,6 @@ class Player(pygame.sprite.Sprite):
         bullet_sound.play()
 
     def exhaust(self):
-        #engine_sound.play() <- this is currently broken
         for i in range(5):
             self.color = (255, random.randint(69, 215), 0)
             particle = Particle(self)
@@ -149,7 +151,7 @@ class Bullet(pygame.sprite.Sprite):
 class Asteroid(pygame.sprite.Sprite):
     def __init__(self, spin_direction, spin_factor):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load('Asteroid Brown.png')
+        self.image = pygame.image.load('Assets/Art/Asteroid Brown.png')
         self.has_spawned = False
 
         # Randomly changes the size of the asteroid
@@ -392,6 +394,11 @@ while game_running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 player.shoot()
+            if event.key == pygame.K_w:
+                engine_sound.play()
+        # if event.type == pygame.KEYUP:
+        #     if event.key == pygame.K_w:
+        #         engine_sound.stop()
 
     # Spawns new asteroids
     if asteroid_count < 15:
