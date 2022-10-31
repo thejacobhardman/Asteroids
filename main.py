@@ -280,7 +280,7 @@ def check_collisions(sprite, group):
                 asteroids.remove(individual_sprite)
                 return True
     else:
-        collision = pygame.sprite.spritecollide(sprite, group, False)
+        collision = pygame.sprite.spritecollide(sprite, group, True)
         if collision:
                 all_sprites.remove(sprite)
                 return True
