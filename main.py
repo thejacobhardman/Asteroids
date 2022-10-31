@@ -17,6 +17,7 @@ pygame.display.set_caption("Asteroids")
 icon = pygame.image.load('Asteroid Brown.png')
 pygame.display.set_icon(icon)
 
+# Shakes the screen upon player death
 offset = repeat((0, 0))
 def shake():
     s = -1
@@ -40,6 +41,9 @@ class Player(pygame.sprite.Sprite):
         self.acceleration = vec(0, -0.2)
         self.angle_speed = 0
         self.angle = 0
+        self.id = "player"
+        self.color = (255, 165, 0)
+        self.particles = pygame.sprite.Group()
 
     def update(self):
         # Slows the ship as time passes
@@ -55,6 +59,7 @@ class Player(pygame.sprite.Sprite):
             player.rotate()
         if keys[pygame.K_UP] or keys[pygame.K_w]:
             self.vel += self.acceleration
+            self.exhaust()
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             self.vel -= self.acceleration
 
@@ -89,6 +94,12 @@ class Player(pygame.sprite.Sprite):
         bullet = Bullet(self)
         all_sprites.add(bullet)
         bullets.add(bullet)
+
+    def exhaust(self):
+        for i in range(5):
+            particle = Particle(self)
+            all_sprites.add(particle)
+            self.particles.add(particle)
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, player):
@@ -231,6 +242,7 @@ class Explosion():
         self.position = position
         self.color = (255, 255, 255)
         self.particles = pygame.sprite.Group()
+        self.id = "explosion"
 
     def explode(self):
         for i in range(50):
@@ -244,8 +256,12 @@ class Particle(pygame.sprite.Sprite):
         self.parent = parent
         self.color = parent.color
         self.position = vec(parent.position)
-        self.angle = random.randint(0, 360)
-        self.vel = vec(0, 10).rotate(self.angle)
+        if parent.id == "explosion":
+            self.angle = random.randint(0, 360)
+            self.vel = vec(0, 10).rotate(self.angle)
+        elif parent.id == "player":
+            self.vel = vec(0, 10).rotate(parent.angle+random.randint(-5, 5))
+            self.angle = parent.angle+random.randint(-5, 5)
         self.image = pygame.Surface((random.randint(1, 4), random.randint(1, 4)), pygame.SRCALPHA)
         self.image.fill(self.color)
         self.original_image = self.image
