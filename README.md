@@ -6,6 +6,7 @@
  Down-Arrow / S: Reverse
  Right-Arrow / D: Rotate Right
  Left-Arrow / A: Rotate Left
+ Space: Shoot
 
  Credits:
  - Asteroid Logo Art by FunWithPixels https://opengameart.org/content/brown-asteroid
