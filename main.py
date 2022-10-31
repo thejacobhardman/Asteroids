@@ -1,5 +1,6 @@
 import pygame, random, math
 from itertools import repeat
+from pygame import mixer
 
 pygame.init()
 
@@ -16,6 +17,13 @@ screen = org_screen.copy()
 pygame.display.set_caption("Asteroids")
 icon = pygame.image.load('Asteroid Brown.png')
 pygame.display.set_icon(icon)
+
+mixer.music.load("through space.ogg")
+mixer.music.play(-1)
+
+bullet_sound = mixer.Sound("laser1.wav")
+engine_sound = mixer.Sound("engine3.wav")
+explosion_sound = mixer.Sound("explosion.wav")
 
 # Shakes the screen upon player death
 offset = repeat((0, 0))
@@ -94,8 +102,10 @@ class Player(pygame.sprite.Sprite):
         bullet = Bullet(self)
         all_sprites.add(bullet)
         bullets.add(bullet)
+        bullet_sound.play()
 
     def exhaust(self):
+        #engine_sound.play() <- this is currently broken
         for i in range(5):
             self.color = (255, random.randint(69, 215), 0)
             particle = Particle(self)
@@ -246,6 +256,7 @@ class Explosion():
         self.id = "explosion"
 
     def explode(self):
+        explosion_sound.play()
         for i in range(50):
             self.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
             particle = Particle(self)
