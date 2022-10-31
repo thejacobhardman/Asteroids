@@ -1,4 +1,4 @@
-import pygame, random, math
+import pygame, random, math, sys
 from itertools import repeat
 from pygame import mixer
 
@@ -11,15 +11,14 @@ HEIGHT = 720
 MAX_SPEED = 9
 FPS = 60
 fps_clock = pygame.time.Clock()
+title_font = pygame.font.SysFont(None, 64)
+game_font = pygame.font.SysFont(None, 48)
 
 org_screen = pygame.display.set_mode((WIDTH, HEIGHT))
 screen = org_screen.copy()
 pygame.display.set_caption("Asteroids")
 icon = pygame.image.load('Assets/Art/Asteroid Brown.png')
 pygame.display.set_icon(icon)
-
-mixer.music.load("Assets/SFX/through space.ogg")
-mixer.music.play(-1)
 
 bullet_sound = mixer.Sound("Assets/SFX/laser1.wav")
 bullet_sound.set_volume(0.8)
@@ -368,6 +367,12 @@ def check_collisions(sprite, group):
                 return collision
     return Collision(False, (WIDTH/2, HEIGHT/2))
 
+def draw_text(text, font, color, surface, x, y):
+    text = font.render(text, 1, color)
+    text_rect = text.get_rect()
+    text_rect.center = (x, y)
+    surface.blit(text, text_rect)
+
 all_sprites = pygame.sprite.Group()
 asteroids = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
@@ -384,65 +389,130 @@ for i in range(199):
         stars[i].position.x = random.randint(0, WIDTH)
         stars[i].position.y = random.randint(0, HEIGHT)
 
-fullscreen = False
+click = False
 
-game_running = True
-while game_running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            game_running = False
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                player.shoot()
-            if event.key == pygame.K_w:
-                engine_sound.play()
-        # if event.type == pygame.KEYUP:
-        #     if event.key == pygame.K_w:
-        #         engine_sound.stop()
+def main_menu(all_sprites, asteroids, bullets, player, asteroid_count, offset):
+    mixer.music.load("Assets/SFX/MyVeryOwnDeadShip.ogg")
+    mixer.music.play(-1)
+    while True:
+        screen.fill((0, 0, 0))
+        for star in stars:
+            star.draw()
+            star.twinkle()
+        draw_text("ASTEROIDS", title_font, (255, 255, 255), screen, WIDTH/2, HEIGHT/2-100)
+        mouseX, mouseY = pygame.mouse.get_pos()
+        button = pygame.Rect(WIDTH/2, HEIGHT/2, 200, 50)
+        button.center=(WIDTH/2, HEIGHT/2)
+        if button.collidepoint((mouseX, mouseY)):
+            if click:
+                game_loop(all_sprites, asteroids, bullets, player, asteroid_count, offset)
+        pygame.draw.rect(screen, (255, 255, 255), button)
+        draw_text("PLAY", game_font, (0, 0, 0), screen, WIDTH/2, HEIGHT/2)
 
-    # Spawns new asteroids
-    if asteroid_count < 15:
-        # Determines what direction and how fast the asteroid will spin
-        spin_generator = random.randint(0, 1)
-        spin_factor = random.randint(0, 10)
-        spin_direction = ""
-        if spin_generator == 0:
-            spin_direction = "clockwise"
-        if spin_generator == 1:
-            spin_direction = "counter_clockwise"
-        asteroid = Asteroid(spin_direction, spin_factor)
-        all_sprites.add(asteroid)
-        asteroids.add(asteroid)
-        asteroid_count += 1
+        click = False
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    click = True
 
-    current_sprites = all_sprites.__len__()
-    if current_sprites > 16:
-        current_sprites = 16
-    all_sprites.update()
-    if all_sprites.__len__() < current_sprites:
-            asteroid_count -= 1
+        fps_clock.tick(FPS)
+        org_screen.blit(screen, next(offset))
+        pygame.display.update()
 
-    did_player_collide = check_collisions(player, asteroids)
-    if did_player_collide.is_collision:
-        position = did_player_collide.position
-        explosion = Explosion(position)
-        explosion.explode()
-        offset = shake()
-    if bullets.__len__() >= 1:
-        did_bullet_collide = check_collisions(asteroids, bullets)
-        if did_bullet_collide.is_collision:
-            position = did_bullet_collide.position
+def game_loop(all_sprites, asteroids, bullets, player, asteroid_count, offset):
+    mixer.music.load("Assets/SFX/through space.ogg")
+    mixer.music.play(-1)
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    player.shoot()
+                if event.key == pygame.K_w:
+                    engine_sound.play()
+
+        # Spawns new asteroids
+        if asteroid_count < 15:
+            # Determines what direction and how fast the asteroid will spin
+            spin_generator = random.randint(0, 1)
+            spin_factor = random.randint(0, 10)
+            spin_direction = ""
+            if spin_generator == 0:
+                spin_direction = "clockwise"
+            if spin_generator == 1:
+                spin_direction = "counter_clockwise"
+            asteroid = Asteroid(spin_direction, spin_factor)
+            all_sprites.add(asteroid)
+            asteroids.add(asteroid)
+            asteroid_count += 1
+
+        current_sprites = all_sprites.__len__()
+        if current_sprites > 16:
+            current_sprites = 16
+        all_sprites.update()
+        if all_sprites.__len__() < current_sprites:
+                asteroid_count -= 1
+
+        did_player_collide = check_collisions(player, asteroids)
+        if did_player_collide.is_collision:
+            position = did_player_collide.position
             explosion = Explosion(position)
             explosion.explode()
+            offset = shake()
+            game_over() # <- Need to delay this
+        if bullets.__len__() >= 1:
+            did_bullet_collide = check_collisions(asteroids, bullets)
+            if did_bullet_collide.is_collision:
+                position = did_bullet_collide.position
+                explosion = Explosion(position)
+                explosion.explode()
 
-    org_screen.fill((255, 255, 255))
-    screen.fill((0, 0, 0))
+        org_screen.fill((255, 255, 255))
+        screen.fill((0, 0, 0))
 
-    for star in stars:
-        star.draw()
-        star.update(-player.vel)
+        for star in stars:
+            star.draw()
+            star.update(-player.vel)
 
-    fps_clock.tick(FPS)
-    all_sprites.draw(screen)
-    org_screen.blit(screen, next(offset))
-    pygame.display.update()
+        fps_clock.tick(FPS)
+        all_sprites.draw(screen)
+        org_screen.blit(screen, next(offset))
+        pygame.display.update()
+
+def game_over():
+    mixer.music.load("Assets/SFX/MyVeryOwnDeadShip.ogg")
+    mixer.music.play(-1)
+    while True:
+        screen.fill((0, 0, 0))
+        for star in stars:
+            star.draw()
+            star.twinkle()
+        draw_text("GAME OVER", title_font, (255, 255, 255), screen, WIDTH/2, HEIGHT/2-100)
+        mouseX, mouseY = pygame.mouse.get_pos()
+        button = pygame.Rect(WIDTH/2, HEIGHT/2, 200, 50)
+        button.center=(WIDTH/2, HEIGHT/2)
+        if button.collidepoint((mouseX, mouseY)):
+            if click:
+                main_menu()
+        pygame.draw.rect(screen, (255, 255, 255), button)
+        draw_text("MAIN MENU", game_font, (0, 0, 0), screen, WIDTH/2, HEIGHT/2)
+
+        click = False
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    click = True
+
+        fps_clock.tick(FPS)
+        org_screen.blit(screen, next(offset))
+        pygame.display.update()
+
+main_menu(all_sprites, asteroids, bullets, player, asteroid_count, offset)
