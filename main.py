@@ -71,7 +71,39 @@ class Player(pygame.sprite.Sprite):
         if self.position.y > HEIGHT:
             self.position.y = 0
 
-#class Bullet(pygame.sprite.Sprite):
+    def shoot(self):
+        bullet = Bullet(self)
+        all_sprites.add(bullet)
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, player):
+        pygame.sprite.Sprite.__init__(self)
+        self.color = (255, 0, 0)
+        self.position = vec(player.position)
+        self.vel = vec(0, 10).rotate(player.angle+180)
+        self.angle = player.angle+180
+        self.image = pygame.Surface((3, 15), pygame.SRCALPHA)
+        self.image.fill(self.color)
+        self.original_image = self.image
+        self.rect = self.image.get_rect(center=self.position)
+
+    def update(self):
+        self.image = pygame.transform.rotate(self.original_image, -self.angle)
+        #print(self.angle)
+        self.rect = self.image.get_rect(center=self.rect.center)
+        self.position += self.vel
+        self.rect.center = self.position
+        self.leave_screen()
+
+    def leave_screen(self):
+        if self.position.x > WIDTH:
+            all_sprites.remove(self)
+        if self.position.x < 0:
+            all_sprites.remove(self)
+        if self.position.y <= 0:
+            all_sprites.remove(self)
+        if self.position.y > HEIGHT:
+            all_sprites.remove(self)
 
 
 class Asteroid(pygame.sprite.Sprite):
@@ -176,16 +208,11 @@ class Asteroid(pygame.sprite.Sprite):
 class Star():
     def __init__(self):
         self.position = vec(WIDTH / 2, HEIGHT / 2)
-        self.vel = vec(0, 0)
-        self.acceleration = vec(0, -0.2)
-        self.angle_speed = 0
-        self.angle = 0
         self.color = (255, 255, 255)
         self.radius = 1
         self.max_radius = 2
 
     def update(self, vel):
-        self.vel = vel
         self.position += vel
         self.twinkle()
         self.wrap_around_screen()
@@ -257,6 +284,8 @@ while game_running:
                     WIDTH = 1280
                     HEIGHT = 720
                     screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+            if event.key == pygame.K_SPACE:
+                player.shoot()
 
     # Spawns new asteroids
     if asteroid_count < 15:
@@ -273,6 +302,8 @@ while game_running:
         asteroid_count += 1
 
     current_sprites = all_sprites.__len__()
+    if current_sprites > 16:
+        current_sprites = 16
     all_sprites.update()
     if all_sprites.__len__() < current_sprites:
             asteroid_count -= 1
