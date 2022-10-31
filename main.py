@@ -104,7 +104,6 @@ class Bullet(pygame.sprite.Sprite):
 
     def update(self):
         self.image = pygame.transform.rotate(self.original_image, -self.angle)
-        #print(self.angle)
         self.rect = self.image.get_rect(center=self.rect.center)
         self.position += self.vel
         self.rect.center = self.position
@@ -227,6 +226,51 @@ class Asteroid(pygame.sprite.Sprite):
                 all_sprites.remove(self)
                 asteroids.remove(self)
             
+class Explosion():
+    def __init__(self, position):
+        self.position = position
+        self.color = (255, 255, 255)
+        self.particles = pygame.sprite.Group()
+
+    def explode(self):
+        for i in range(50):
+            particle = Particle(self)
+            all_sprites.add(particle)
+            self.particles.add(particle)
+
+class Particle(pygame.sprite.Sprite):
+    def __init__(self, parent):
+        pygame.sprite.Sprite.__init__(self)
+        self.parent = parent
+        self.color = parent.color
+        self.position = vec(parent.position)
+        self.angle = random.randint(0, 360)
+        self.vel = vec(0, 10).rotate(self.angle)
+        self.image = pygame.Surface((random.randint(1, 4), random.randint(1, 4)), pygame.SRCALPHA)
+        self.image.fill(self.color)
+        self.original_image = self.image
+        self.rect = self.image.get_rect(center=self.position)
+
+    def update(self):
+        self.image = pygame.transform.rotate(self.original_image, self.angle)
+        self.rect = self.image.get_rect(center=self.rect.center)
+        self.position += self.vel
+        self.rect.center = self.position
+        self.leave_screen()
+
+    def leave_screen(self):
+        if self.position.x > WIDTH:
+            all_sprites.remove(self)
+            self.parent.particles.remove(self)
+        if self.position.x < 0:
+            all_sprites.remove(self)
+            self.parent.particles.remove(self)
+        if self.position.y <= 0:
+            all_sprites.remove(self)
+            self.parent.particles.remove(self)
+        if self.position.y > HEIGHT:
+            all_sprites.remove(self)
+            self.parent.particles.remove(self)
 
 class Star():
     def __init__(self):
@@ -261,6 +305,11 @@ class Star():
             else:
                 self.radius -= 1
 
+class Collision():
+    def __init__(self, is_collision, position):
+        self.is_collision = is_collision
+        self.position = position
+
 # Checks to make sure that no stars are overlapping
 def check_intersections(c1, c2):
     dx = c1.position.x - c2.position.x
@@ -271,19 +320,22 @@ def check_intersections(c1, c2):
     return False
 
 def check_collisions(sprite, group):
-    collision = False
+    is_collision = False
     if type(sprite) == pygame.sprite.Group:
         for individual_sprite in sprite.sprites():
-            collision = pygame.sprite.spritecollide(individual_sprite, group, False)
-            if collision:
+            is_collision = pygame.sprite.spritecollide(individual_sprite, group, False)
+            if is_collision:
                 all_sprites.remove(individual_sprite)
                 asteroids.remove(individual_sprite)
-                return True
+                collision = Collision(True, individual_sprite.position)
+                return collision
     else:
-        collision = pygame.sprite.spritecollide(sprite, group, True)
-        if collision:
+        is_collision = pygame.sprite.spritecollide(sprite, group, True)
+        if is_collision:
                 all_sprites.remove(sprite)
-                return True
+                collision = Collision(True, sprite.position)
+                return collision
+    return Collision(False, (WIDTH/2, HEIGHT/2))
 
 all_sprites = pygame.sprite.Group()
 asteroids = pygame.sprite.Group()
@@ -334,10 +386,18 @@ while game_running:
     if all_sprites.__len__() < current_sprites:
             asteroid_count -= 1
 
-    if check_collisions(player, asteroids):
+    did_player_collide = check_collisions(player, asteroids)
+    if did_player_collide.is_collision:
+        position = did_player_collide.position
+        explosion = Explosion(position)
+        explosion.explode()
         offset = shake()
     if bullets.__len__() >= 1:
-        check_collisions(asteroids, bullets)
+        did_bullet_collide = check_collisions(asteroids, bullets)
+        if did_bullet_collide.is_collision:
+            position = did_bullet_collide.position
+            explosion = Explosion(position)
+            explosion.explode()
 
     org_screen.fill((255, 255, 255))
     screen.fill((0, 0, 0))
