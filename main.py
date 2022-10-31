@@ -74,6 +74,7 @@ class Player(pygame.sprite.Sprite):
     def shoot(self):
         bullet = Bullet(self)
         all_sprites.add(bullet)
+        bullets.add(bullet)
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, player):
@@ -98,12 +99,16 @@ class Bullet(pygame.sprite.Sprite):
     def leave_screen(self):
         if self.position.x > WIDTH:
             all_sprites.remove(self)
+            bullets.remove(self)
         if self.position.x < 0:
             all_sprites.remove(self)
+            bullets.remove(self)
         if self.position.y <= 0:
             all_sprites.remove(self)
+            bullets.remove(self)
         if self.position.y > HEIGHT:
             all_sprites.remove(self)
+            bullets.remove(self)
 
 
 class Asteroid(pygame.sprite.Sprite):
@@ -197,12 +202,16 @@ class Asteroid(pygame.sprite.Sprite):
         if self.has_spawned:
             if self.position.x > WIDTH:
                 all_sprites.remove(self)
+                asteroids.remove(self)
             if self.position.x < 0:
                 all_sprites.remove(self)
+                asteroids.remove(self)
             if self.position.y <= 0:
                 all_sprites.remove(self)
+                asteroids.remove(self)
             if self.position.y > HEIGHT:
                 all_sprites.remove(self)
+                asteroids.remove(self)
             
 
 class Star():
@@ -247,7 +256,23 @@ def check_intersections(c1, c2):
         return True
     return False
 
+def check_collisions(sprite, group):
+    collision = False
+    if type(sprite) == pygame.sprite.Group:
+        for individual_sprite in sprite.sprites():
+            collision = pygame.sprite.spritecollide(individual_sprite, group, False)
+            if collision:
+                all_sprites.remove(individual_sprite)
+                asteroids.remove(individual_sprite)
+    else:
+        collision = pygame.sprite.spritecollide(sprite, group, False)
+        if collision:
+                all_sprites.remove(sprite)
+    
+
 all_sprites = pygame.sprite.Group()
+asteroids = pygame.sprite.Group()
+bullets = pygame.sprite.Group()
 player = Player()
 all_sprites.add(player)
 asteroid_count = 0
@@ -299,6 +324,7 @@ while game_running:
             spin_direction = "counter_clockwise"
         asteroid = Asteroid(spin_direction, spin_factor)
         all_sprites.add(asteroid)
+        asteroids.add(asteroid)
         asteroid_count += 1
 
     current_sprites = all_sprites.__len__()
@@ -307,6 +333,10 @@ while game_running:
     all_sprites.update()
     if all_sprites.__len__() < current_sprites:
             asteroid_count -= 1
+
+    check_collisions(player, asteroids)
+    if bullets.__len__() >= 1:
+        check_collisions(asteroids, bullets)
 
     screen.fill((0, 0, 0))
 
