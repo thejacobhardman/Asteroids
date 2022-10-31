@@ -97,6 +97,7 @@ class Player(pygame.sprite.Sprite):
 
     def exhaust(self):
         for i in range(5):
+            self.color = (255, random.randint(69, 215), 0)
             particle = Particle(self)
             all_sprites.add(particle)
             self.particles.add(particle)
@@ -246,6 +247,7 @@ class Explosion():
 
     def explode(self):
         for i in range(50):
+            self.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
             particle = Particle(self)
             all_sprites.add(particle)
             self.particles.add(particle)
