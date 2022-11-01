@@ -55,6 +55,16 @@ class Player(pygame.sprite.Sprite):
         self.color = (255, 165, 0)
         self.particles = pygame.sprite.Group()
 
+    def reset(self):
+        self.position = vec(WIDTH / 2, HEIGHT / 2)
+        self.image = pygame.transform.rotate(self.original_image, 0)
+        self.rect = self.image.get_rect(center=self.position)
+        self.vel = vec(0, 0)
+        self.acceleration = vec(0, -0.2)
+        self.angle_speed = 0
+        self.angle = 0
+        self.particles.empty()
+
     def update(self):
         # Slows the ship as time passes
         if self.vel != 0:
@@ -383,9 +393,7 @@ def reset_game():
     all_sprites.empty()
     asteroids.empty()
     bullets.empty()
-    player.position = (WIDTH/2, HEIGHT/2)
-    player.angle = 0
-    player.vel = 0
+    player.reset()
     all_sprites.add(player)
 
 # Generates the starfield
