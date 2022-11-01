@@ -377,8 +377,16 @@ all_sprites = pygame.sprite.Group()
 asteroids = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
 player = Player()
-all_sprites.add(player)
 asteroid_count = 0
+
+def reset_game():
+    all_sprites.empty()
+    asteroids.empty()
+    bullets.empty()
+    player.position = (WIDTH/2, HEIGHT/2)
+    player.angle = 0
+    player.vel = 0
+    all_sprites.add(player)
 
 # Generates the starfield
 stars = []
@@ -394,6 +402,10 @@ click = False
 def main_menu(all_sprites, asteroids, bullets, player, asteroid_count, offset):
     mixer.music.load("Assets/SFX/MyVeryOwnDeadShip.ogg")
     mixer.music.play(-1)
+    click = False
+
+    reset_game()
+
     while True:
         screen.fill((0, 0, 0))
         for star in stars:
@@ -401,13 +413,21 @@ def main_menu(all_sprites, asteroids, bullets, player, asteroid_count, offset):
             star.twinkle()
         draw_text("ASTEROIDS", title_font, (255, 255, 255), screen, WIDTH/2, HEIGHT/2-100)
         mouseX, mouseY = pygame.mouse.get_pos()
-        button = pygame.Rect(WIDTH/2, HEIGHT/2, 200, 50)
-        button.center=(WIDTH/2, HEIGHT/2)
-        if button.collidepoint((mouseX, mouseY)):
+        play_button = pygame.Rect(WIDTH/2, HEIGHT/2, 200, 50)
+        play_button.center=(WIDTH/2, HEIGHT/2)
+        quit_button = pygame.Rect(WIDTH/2, HEIGHT/2+75, 200, 50)
+        quit_button.center=(WIDTH/2, HEIGHT/2+75)
+        if play_button.collidepoint((mouseX, mouseY)):
             if click:
                 game_loop(all_sprites, asteroids, bullets, player, asteroid_count, offset)
-        pygame.draw.rect(screen, (255, 255, 255), button)
+        if quit_button.collidepoint((mouseX, mouseY)):
+            if click:
+                pygame.quit()
+                sys.exit()
+        pygame.draw.rect(screen, (255, 255, 255), play_button)
         draw_text("PLAY", game_font, (0, 0, 0), screen, WIDTH/2, HEIGHT/2)
+        pygame.draw.rect(screen, (255, 255, 255), quit_button)
+        draw_text("QUIT", game_font, (0, 0, 0), screen, WIDTH/2, HEIGHT/2+75)
 
         click = False
         for event in pygame.event.get():
@@ -464,7 +484,7 @@ def game_loop(all_sprites, asteroids, bullets, player, asteroid_count, offset):
             explosion = Explosion(position)
             explosion.explode()
             offset = shake()
-            game_over() # <- Need to delay this
+            game_over(all_sprites, asteroids, bullets, player, asteroid_count, offset) # <- Need to delay this
         if bullets.__len__() >= 1:
             did_bullet_collide = check_collisions(asteroids, bullets)
             if did_bullet_collide.is_collision:
@@ -484,9 +504,11 @@ def game_loop(all_sprites, asteroids, bullets, player, asteroid_count, offset):
         org_screen.blit(screen, next(offset))
         pygame.display.update()
 
-def game_over():
+def game_over(all_sprites, asteroids, bullets, player, asteroid_count, offset):
     mixer.music.load("Assets/SFX/MyVeryOwnDeadShip.ogg")
     mixer.music.play(-1)
+    click = False
+
     while True:
         screen.fill((0, 0, 0))
         for star in stars:
@@ -494,13 +516,21 @@ def game_over():
             star.twinkle()
         draw_text("GAME OVER", title_font, (255, 255, 255), screen, WIDTH/2, HEIGHT/2-100)
         mouseX, mouseY = pygame.mouse.get_pos()
-        button = pygame.Rect(WIDTH/2, HEIGHT/2, 200, 50)
-        button.center=(WIDTH/2, HEIGHT/2)
-        if button.collidepoint((mouseX, mouseY)):
+        menu_button = pygame.Rect(WIDTH/2, HEIGHT/2, 200, 50)
+        menu_button.center=(WIDTH/2, HEIGHT/2)
+        quit_button= pygame.Rect(WIDTH/2, HEIGHT/2+75, 200, 50)
+        quit_button.center=(WIDTH/2, HEIGHT/2+75)
+        if menu_button.collidepoint((mouseX, mouseY)):
             if click:
-                main_menu()
-        pygame.draw.rect(screen, (255, 255, 255), button)
+                main_menu(all_sprites, asteroids, bullets, player, asteroid_count, offset)
+        if quit_button.collidepoint((mouseX, mouseY)):
+            if click:
+                pygame.quit()
+                sys.exit()
+        pygame.draw.rect(screen, (255, 255, 255), menu_button)
         draw_text("MAIN MENU", game_font, (0, 0, 0), screen, WIDTH/2, HEIGHT/2)
+        pygame.draw.rect(screen, (255, 255, 255), quit_button)
+        draw_text("QUIT", game_font, (0, 0, 0), screen, WIDTH/2, HEIGHT/2+75)
 
         click = False
         for event in pygame.event.get():
