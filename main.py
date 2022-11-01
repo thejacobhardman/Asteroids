@@ -268,7 +268,7 @@ class Explosion():
 
     def explode(self):
         explosion_sound.play()
-        for i in range(50):
+        for i in range(180):
             self.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
             particle = Particle(self)
             all_sprites.add(particle)
@@ -453,6 +453,8 @@ def main_menu(all_sprites, asteroids, bullets, player, asteroid_count, offset):
 def game_loop(all_sprites, asteroids, bullets, player, asteroid_count, offset):
     mixer.music.load("Assets/SFX/through space.ogg")
     mixer.music.play(-1)
+    explosion = Explosion((WIDTH/2, HEIGHT/2))
+    explosion.explode()
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
